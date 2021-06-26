@@ -19,6 +19,7 @@ function DropBox(props) {
       .catch((error) => setStatus("Form Submission Failed!"));
 
     e.preventDefault();
+    setFile(file)
   };
 
   const encode = (data) => {
