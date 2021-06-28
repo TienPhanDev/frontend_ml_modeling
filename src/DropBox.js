@@ -1,34 +1,43 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 
-function DropBox(props) {
-  const [status, setStatus] = useState("");
-  const [file, setFile] = useState({});
-  const { getRootProps, getInputProps, acceptedFiles, fileRejections } =
-    useDropzone({ accept: "image/*" });
+const baseStyle = {
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  padding: "20px",
+  borderWidth: 2,
+  borderRadius: 2,
+  borderColor: "#eeeeee",
+  borderStyle: "dashed",
+  backgroundColor: "#fafafa",
+  color: "#bdbdbd",
+  outline: "none",
+  transition: "border .24s ease-in-out",
+};
 
-  const handleSubmit = (e) => {
-    const data = { "form-name": "contact", file };
+const activeStyle = {
+  borderColor: "#2196f3",
+};
 
-    fetch("/", {
-      method: "POST",
-      headers: { "Content-Type": "multipart/form-data; boundary=random" },
-      body: encode(data),
-    })
-      .then(() => setStatus("Form Submission Successful!!"))
-      .catch((error) => setStatus("Form Submission Failed!"));
+const acceptStyle = {
+  borderColor: "#00e676",
+};
 
-    e.preventDefault();
-    setFile(file)
-  };
-
-  const encode = (data) => {
-    const formData = new FormData();
-    Object.keys(data).forEach((k) => {
-      formData.append(k, data[k]);
-    });
-    return formData;
-  };
+const rejectStyle = {
+  borderColor: "#ff1744",
+};
+export default function DropBox(props) {
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    isDragAccept,
+    isDragReject,
+    acceptedFiles,
+    fileRejections,
+  } = useDropzone({ accept: ".tar.gz, targz" });
 
   const acceptedFileItems = acceptedFiles.map((file) => (
     <li key={file.path}>
@@ -37,7 +46,7 @@ function DropBox(props) {
   ));
 
   const fileRejectionItems = fileRejections.map(({ file, errors }) => (
-    <li key={`npm i react-dropzone${file.path}`}>
+    <li key={file.path}>
       {file.path} - {file.size} bytes
       <ul>
         {errors.map((e) => (
@@ -46,6 +55,16 @@ function DropBox(props) {
       </ul>
     </li>
   ));
+
+  const style = useMemo(
+    () => ({
+      ...baseStyle,
+      ...(isDragActive ? activeStyle : {}),
+      ...(isDragAccept ? acceptStyle : {}),
+      ...(isDragReject ? rejectStyle : {}),
+    }),
+    [isDragActive, isDragReject, isDragAccept]
+  );
 
   return (
     <div
@@ -71,65 +90,36 @@ function DropBox(props) {
             2) Click 'Begin Modeling' button below <br />
             3) Take a break and chill b/c the results can take up to 15 mins to
             process so don't close the browser! <br />
-            4) Once completed; you will be able to upload new
-            images and see how accurate your model is at understanding real images!
-            (e.g. 94% accuracy) <br />
+            4) Once completed; you will be able to upload new images and see how
+            accurate your model is at understanding real images! (e.g. 94%
+            accuracy) <br />
           </p>
         </div>
-        <form
-          className="mt-8 space-y-3"
-          onSubmit={handleSubmit}
-          action="/thank-you/"
-          method="POST"
-        >
           <div className="grid grid-cols-1 space-y-2">
             <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col rounded-lg border-4 border-dashed w-full h-60 p-10 group text-center">
-                <div className="h-full w-full text-center flex flex-col items-center justify-center">
-                  <div className="flex flex-auto max-h-48 w-2/5 mx-auto -mt-4">
-                    <img
-                      className="has-mask h-36 object-center"
-                      src="https://img.freepik.com/free-vector/image-upload-concept-landing-page_52683-27130.jpg?size=338&ext=jpg"
-                      alt="freepik"
-                    />
-                  </div>
+              <div className="container">
+                <div {...getRootProps({ style })}>
+                  <input {...getInputProps()} />
+                  <p>Drag 'n' drop the file here or click to select file</p>
                 </div>
-
-                <section className="container">
-                  <div {...getRootProps({ className: "dropzone" })}>
-                    <input {...getInputProps()} />
-                    <aside>
-                      {acceptedFileItems.length > 1 ? "Accepted files" : ""}
-                      <ul>{acceptedFileItems}</ul>
-                      {acceptedFileItems.length > 1 ? "Rejected files" : ""}
-                      <ul>{fileRejectionItems}</ul>
-                    </aside>
-                  </div>
-                </section>
-              </label>
-            </div><label className="text-xs font-bold text-gray-400 tracking-wide">
-              (Image formats can be *.jpeg, *.jpg, *.png, *.svg)
+              </div>
+            </div>
+            <label className="text-xs font-bold text-gray-400 tracking-wide">
+              (Format must be *.tar.gz)
             </label>
             <button
               className="uppercase w-full flex justify-center bg-blue-500 text-gray-100 p-4 rounded-full tracking-wide font-semibold  focus:outline-none focus:shadow-outline hover:bg-blue-600 shadow-lg cursor-pointer transition ease-in duration-300"
-              type="submit"
             >
               Begin modeling
             </button>
           </div>
-          <div>
-            <h3>{status}</h3>
-          </div>
-        </form>
         <aside>
-          {acceptedFileItems.length > 1 ? "Accepted files" : ""}
-          <ul>{acceptedFileItems}</ul>
-          {acceptedFileItems.length > 1 ? "Rejected files" : ""}
+          <h4>Accepted file</h4>
+          <ul>{acceptedFileItems.length}</ul>
+          <h4>Rejected file</h4>
           <ul>{fileRejectionItems}</ul>
         </aside>
       </div>
     </div>
   );
 }
-
-export default DropBox;
